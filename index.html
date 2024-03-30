@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎉 Happy Birthday 🎉</title>
+<style>
+    body {
+        margin: 0;
+        background: #000;
+        cursor: crosshair;
+        color: #fff;
+        font-family: "Comic Sans MS", cursive, sans-serif;
+        text-align: center;
+    }
+    canvas {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: -1;
+    }
+    #bdayPerson {
+        margin-top: 20px;
+    }
+    #greeting {
+        margin-top: 10px;
+    }
+    #bdayFooter {
+        margin-top: 20px;
+        margin-bottom: 10px;
+    }
+
+h1 {
+      font-size: 5em;
+      font-weight: 900;
+      margin-bottom: 20px;
+      color: #FFD700; /* Increase brightness */
+      text-shadow: 2px 2px 4px #000000; /* Increase contrast */
+    }
+#bdayFooter {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  text-align: center;
+  color: white;
+  font-size: 18px;
+  padding: 10px 20px;
+  background-color: #000;
+  height: 50px;
+}
+@keyframes borderAnimation {
+    0% { border-color: rgb(0, 0, 0); }
+    25% { border-color: rgb(255, 0, 0); }
+    50% { border-color: rgb(0, 255, 0); }
+    75% { border-color: rgb(0, 0, 255); }
+    100% { border-color: rgb(255, 255, 255); }
+  }
+  
+  #bdayPerson {
+    position: relative;
+    display: inline-block;
+  }
+
+#bdayPerson img {
+    border: 2px solid rgb(0, 0, 0);
+    animation: borderAnimation 10s infinite alternate;
+}
+
+</style>
+</head>
+<body>
+<h1>🎂 Happy Birthday 🎂</h1>
+<canvas id="birthday"></canvas>
+<div id="bdayPerson"><img src="bd.png" height="230", width="210" ></div>
+<div id="greeting">
+    <p>"Happy Birthday, Biswajit! Words can't express how grateful I am to have you in my life. You're an amazing friend who always knows how to make me smile. Here's to another year of adventures and unforgettable memories! 💖"</p>
+        <p>You're more than just a friend, you're like My Misti. Thank you for always being there for me. I cherish every memory we've made together and I can't wait to create many more. Wishing you a birthday as special as you are! 🥳"</p>
+
+        <br>
+        <br>
+        <br>
+        <br>
+        <br>
+</div>
+
+<div id="bdayFooter">
+    <p>Crafted with heartfelt ❤️ wishes for you by Mutelad! 🎈🎁🎊</p>
+</div>
+
+  <audio autoplay loop controls style="display: none;">
+    <source src="shot.mp3" type="audio/mpeg">
+    <source src="your_music_file.ogg" type="audio/ogg">
+    Your browser does not support the audio element.
+  </audio>
+
+<script>
+    // helper functions
+    const PI2 = Math.PI * 2
+    const random = (min, max) => Math.random() * (max - min + 1) + min | 0
+    const timestamp = _ => new Date().getTime()
+
+    // container
+    class Birthday {
+        constructor() {
+            this.resize()
+
+            // create a lovely place to store the firework
+            this.fireworks = []
+            this.counter = 0
+
+        }
+
+        resize() {
+            this.width = canvas.width = window.innerWidth
+            let center = this.width / 2 | 0
+            this.spawnA = center - center / 4 | 0
+            this.spawnB = center + center / 4 | 0
+
+            this.height = canvas.height = window.innerHeight
+            this.spawnC = this.height * .1
+            this.spawnD = this.height * .5
+
+        }
+
+        onClick(evt) {
+            let x = evt.clientX || evt.touches && evt.touches[0].pageX
+            let y = evt.clientY || evt.touches && evt.touches[0].pageY
+
+            let count = random(3,5)
+            for(let i = 0; i < count; i++) this.fireworks.push(new Firework(
+                random(this.spawnA, this.spawnB),
+                this.height,
+                x,
+                y,
+                random(0, 260),
+                random(30, 110)))
+
+            this.counter = -1
+
+        }
+
+        update(delta) {
+            ctx.globalCompositeOperation = 'hard-light'
+            ctx.fillStyle = `rgba(20,20,20,${ 7 * delta })`
+            ctx.fillRect(0, 0, this.width, this.height)
+
+            ctx.globalCompositeOperation = 'lighter'
+            for (let firework of this.fireworks) firework.update(delta)
+
+            // if enough time passed... create new new firework
+            this.counter += delta * 3 // each second
+            if (this.counter >= 1) {
+                this.fireworks.push(new Firework(
+                    random(this.spawnA, this.spawnB),
+                    this.height,
+                    random(0, this.width),
+                    random(this.spawnC, this.spawnD),
+                    random(0, 360),
+                    random(30, 110)))
+                this.counter = 0
+            }
+
+            // remove the dead fireworks
+            if (this.fireworks.length > 2000) this.fireworks = this.fireworks.filter(firework => !firework.dead)
+
+        }
+    }
+
+    class Firework {
+        constructor(x, y, targetX, targetY, shade, offsprings) {
+            this.dead = false
+            this.offsprings = offsprings
+
+            this.x = x
+            this.y = y
+            this.targetX = targetX
+            this.targetY = targetY
+
+            this.shade = shade
+            this.history = []
+        }
+        update(delta) {
+            if (this.dead) return
+
+            let xDiff = this.targetX - this.x
+            let yDiff = this.targetY - this.y
+            if (Math.abs(xDiff) > 3 || Math.abs(yDiff) > 3) { // is still moving
+                this.x += xDiff * 2 * delta
+                this.y += yDiff * 2 * delta
+
+                this.history.push({
+                    x: this.x,
+                    y: this.y
+                })
+
+                if (this.history.length > 20) this.history.shift()
+
+            } else {
+                if (this.offsprings && !this.madeChilds) {
+
+                    let babies = this.offsprings / 2
+                    for (let i = 0; i < babies; i++) {
+                        let targetX = this.x + this.offsprings * Math.cos(PI2 * i / babies) | 0
+                        let targetY = this.y + this.offsprings * Math.sin(PI2 * i / babies) | 0
+
+                        birthday.fireworks.push(new Firework(this.x, this.y, targetX,
+
+ targetY, this.shade, 0))
+
+                    }
+
+                }
+                this.madeChilds = true
+                this.history.shift()
+            }
+
+            if (this.history.length === 0) this.dead = true
+            else if (this.offsprings) { 
+                for (let i = 0; this.history.length > i; i++) {
+                    let point = this.history[i]
+                    ctx.beginPath()
+                    ctx.fillStyle = 'hsl(' + this.shade + ',100%,' + i + '%)'
+                    ctx.arc(point.x, point.y, 1, 0, PI2, false)
+                    ctx.fill()
+                } 
+            } else {
+                ctx.beginPath()
+                ctx.fillStyle = 'hsl(' + this.shade + ',100%,50%)'
+                ctx.arc(this.x, this.y, 1, 0, PI2, false)
+                ctx.fill()
+            }
+
+        }
+    }
+
+    let canvas = document.getElementById('birthday')
+    let ctx = canvas.getContext('2d')
+
+    let then = timestamp()
+
+    let birthday = new Birthday
+    window.onresize = () => birthday.resize()
+    document.onclick = evt => birthday.onClick(evt)
+    document.ontouchstart = evt => birthday.onClick(evt)
+
+    ;(function loop(){
+        requestAnimationFrame(loop)
+
+        let now = timestamp()
+        let delta = now - then
+
+        then = now
+        birthday.update(delta / 1000)
+
+
+    })()
+</script>
+</body>
+</html>
